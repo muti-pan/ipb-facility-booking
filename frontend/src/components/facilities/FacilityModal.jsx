@@ -1,5 +1,6 @@
 import { useState } from "react";
 import BookingForm from "../booking/BookingForm";
+import { getDirectImageUrl } from '../../utils/formatters';
 
 function formatRupiah(n) {
   return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(n);
@@ -27,7 +28,7 @@ export default function FacilityModal({ facility, onClose, onBookingSuccess }) {
             <>
               <div className="modal-facility-img">
                 {facility.foto
-                  ? <img src={facility.foto} alt={facility.nama} />
+                  ? <img src={getDirectImageUrl(facility.foto)} alt={facility.nama} onError={e => { e.target.style.display = "none"; }} />
                   : <span style={{ fontSize: 60, opacity: 0.3 }}>🏛️</span>
                 }
               </div>

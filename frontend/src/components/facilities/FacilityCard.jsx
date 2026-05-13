@@ -1,3 +1,5 @@
+import { getDirectImageUrl } from '../../utils/formatters';
+
 function formatRupiah(n) {
   return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(n);
 }
@@ -11,7 +13,7 @@ export default function FacilityCard({ facility, onClick }) {
     <div className="facility-card" onClick={onClick}>
       <div className="facility-card-img">
         {facility.foto
-          ? <img src={facility.foto} alt={facility.nama} onError={e => { e.target.style.display = "none"; }} />
+          ? <img src={getDirectImageUrl(facility.foto)} alt={facility.nama} onError={e => { e.target.style.display = "none"; }} />
           : <span style={{ fontSize: 40, opacity: 0.3 }}>🏛️</span>
         }
       </div>
