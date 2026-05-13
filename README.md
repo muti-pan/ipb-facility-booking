@@ -1,4 +1,4 @@
-# 🏛️ SIMFAS IPB — Sistem Peminjaman Fasilitas Kampus
+# 🏛️ IPBFacility — Sistem Peminjaman Fasilitas Kampus
 
 Aplikasi web untuk peminjaman ruangan dan fasilitas kampus IPB University.
 
