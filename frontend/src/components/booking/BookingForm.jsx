@@ -30,7 +30,7 @@ export default function BookingForm({ facility, onSuccess, onBack }) {
         tanggal_peminjaman: new Date(form.tanggal_peminjaman).toISOString(),
         jam_mulai: form.jam_mulai,
         jam_selesai: form.jam_selesai,
-        lampiran_surat: form.lampiran_surat || null,
+        lampiran_surat: form.lampiran_surat,
       };
 
       await apiFetch("/bookings/", {
@@ -126,6 +126,7 @@ export default function BookingForm({ facility, onSuccess, onBack }) {
           placeholder="https://drive.google.com/... atau URL file PDF"
           value={form.lampiran_surat}
           onChange={e => setForm(p => ({ ...p, lampiran_surat: e.target.value }))}
+          required
         />
         <p className="form-hint">Upload ke Google Drive/OneDrive lalu paste link-nya di sini</p>
       </div>
