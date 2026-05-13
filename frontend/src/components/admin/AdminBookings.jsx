@@ -65,6 +65,22 @@ export default function AdminBookings({ onRefreshStats }) {
     setProcessing(false);
   };
 
+  const handleApproveCancellation = async (cancellationId) => {
+    setProcessing(true);
+    try {
+      await apiFetch(`/admin/approve-cancellation/${cancellationId}`, {
+        method: "POST",
+      });
+      setSelected(null);
+      await load();
+      onRefreshStats?.();
+      showToast("✅ Pembatalan berhasil disetujui");
+    } catch (e) {
+      showToast("❌ " + e.message);
+    }
+    setProcessing(false);
+  };
+
   const handleReject = async () => {
     if (!rejectReason.trim()) return;
     setProcessing(true);
@@ -158,7 +174,7 @@ export default function AdminBookings({ onRefreshStats }) {
                 <th>Waktu Pinjam</th>
                 <th>Detail</th>
                 <th>Status</th>
-                <th>Aksi</th>
+                <th>Aksi/Alasan</th>
               </tr>
             </thead>
             <tbody>
@@ -189,20 +205,20 @@ export default function AdminBookings({ onRefreshStats }) {
                     </td>
                     <td>
                       <span className={`badge ${cfg.class}`}>{cfg.label}</span>
-                      {b.alasan_penolakan && (
-                        <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4, maxWidth: 160 }}>
-                          {b.alasan_penolakan}
-                        </div>
-                      )}
                     </td>
                     <td>
-                      {b.status === "menunggu" && (
+                      {(b.status === "menunggu" || b.status === "menunggu_batal") && (
                         <button
                           className="btn btn-primary btn-sm"
                           onClick={() => setSelected(b)}
                         >
-                          Tinjau
+                          {b.status === "menunggu_batal" ? "Setujui" : "Tinjau"}
                         </button>
+                      )}
+                      {b.alasan_penolakan && (
+                        <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4, maxWidth: 160 }}>
+                          {b.alasan_penolakan}
+                        </div>
                       )}
                     </td>
                   </tr>
@@ -240,21 +256,23 @@ export default function AdminBookings({ onRefreshStats }) {
               </div>
 
               <div style={{ display: "flex", gap: 12 }}>
-                <button
-                  className="btn btn-danger"
-                  style={{ flex: 1 }}
-                  onClick={() => { setRejectModal(selected); }}
-                  disabled={processing}
-                >
-                  Ditolak
-                </button>
+                {selected.status === "menunggu" && (
+                  <button
+                    className="btn btn-danger"
+                    style={{ flex: 1 }}
+                    onClick={() => { setRejectModal(selected); }}
+                    disabled={processing}
+                  >
+                    Ditolak
+                  </button>
+                )}
                 <button
                   className="btn btn-success"
                   style={{ flex: 1 }}
-                  onClick={() => handleApprove(selected.id)}
+                  onClick={() => selected.status === "menunggu_batal" ? handleApproveCancellation(selected.cancellation_id) : handleApprove(selected.id)}
                   disabled={processing}
                 >
-                  {processing ? "Memproses..." : "Disetujui"}
+                  {processing ? "Memproses..." : selected.status === "menunggu_batal" ? "Setujui" : "Disetujui"}
                 </button>
               </div>
             </div>

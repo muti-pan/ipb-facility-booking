@@ -98,6 +98,10 @@ class Booking(Base):
     schedule = relationship("Schedule", back_populates="booking", uselist=False)
     notifications = relationship("Notification", back_populates="booking")
 
+    @property
+    def cancellation_id(self):
+        return self.cancellation.id if self.cancellation else None
+
 
 class Approval(Base):
     __tablename__ = "approvals"

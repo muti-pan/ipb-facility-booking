@@ -23,6 +23,12 @@ export default function BookingForm({ facility, onSuccess, onBack }) {
     setError("");
     setLoading(true);
 
+    if (form.jam_mulai >= form.jam_selesai) {
+      setError("Jam selesai harus setelah jam mulai");
+      setLoading(false);
+      return;
+    }
+
     try {
       const payload = {
         fasilitas_id: facility.id,
@@ -109,6 +115,7 @@ export default function BookingForm({ facility, onSuccess, onBack }) {
             <input
               className="form-input"
               type="time"
+              min={form.jam_mulai}
               value={form.jam_selesai}
               onChange={e => setForm(p => ({ ...p, jam_selesai: e.target.value }))}
               required
