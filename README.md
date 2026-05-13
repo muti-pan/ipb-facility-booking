@@ -7,7 +7,7 @@ Aplikasi web untuk peminjaman ruangan dan fasilitas kampus IPB University.
 ## 📁 STRUKTUR FOLDER LENGKAP
 
 ```
-ipb-facility/
+ipb-facility-booking/
 │
 ├── backend/                          ← FastAPI (Python)
 │   ├── app/
