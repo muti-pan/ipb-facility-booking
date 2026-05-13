@@ -36,7 +36,7 @@ export default function LoginPage() {
         <div className="login-card">
           <div className="login-logo">
             <div className="login-logo-circle">IPB</div>
-            <div className="login-title">SIMFAS IPB</div>
+            <div className="login-title">IPB Facility</div>
             <div className="login-subtitle">Sistem Peminjaman Fasilitas Kampus</div>
           </div>
 

@@ -46,7 +46,7 @@ export default function AdminDashboard() {
           <div className="sidebar-logo">
             <div className="sidebar-logo-icon">IPB</div>
             <div>
-              <div className="sidebar-logo-text">SIMFAS</div>
+              <div className="sidebar-logo-text">IPB Facility</div>
               <div className="sidebar-logo-sub">Panel Admin</div>
             </div>
           </div>
