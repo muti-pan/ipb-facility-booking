@@ -1,4 +1,4 @@
-# 🏛️ IPBFacility — Sistem Peminjaman Fasilitas Kampus
+# 🏛️ IPB Facility — Sistem Peminjaman Fasilitas Kampus
 
 Aplikasi web untuk peminjaman ruangan dan fasilitas kampus IPB University.
 
