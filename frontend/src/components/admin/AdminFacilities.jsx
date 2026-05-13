@@ -1,8 +1,13 @@
 import { useState, useEffect } from "react";
 import { apiFetch } from "../../App";
+import { getDirectImageUrl } from "../../utils/formatters";
 
 function formatRupiah(n) {
-  return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(n);
+  return new Intl.NumberFormat("id-ID", { 
+    style: "currency", 
+    currency: "IDR", 
+    maximumFractionDigits: 0 
+  }).format(n);
 }
 
 export default function AdminFacilities({ onAdd }) {
@@ -19,13 +24,18 @@ export default function AdminFacilities({ onAdd }) {
     try {
       const data = await apiFetch("/facilities/");
       setFacilities(data);
-    } catch {}
+    } catch (err) {
+      console.error("Gagal memuat data:", err);
+    }
     setLoading(false);
   };
 
   useEffect(() => { load(); }, []);
 
-  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(""), 3000); };
+  const showToast = (msg) => { 
+    setToast(msg); 
+    setTimeout(() => setToast(""), 3000); 
+  };
 
   const openEdit = (f) => {
     setEditTarget(f);
@@ -122,10 +132,20 @@ export default function AdminFacilities({ onAdd }) {
                 display: "flex", alignItems: "center", justifyContent: "center",
                 overflow: "hidden", position: "relative"
               }}>
-                {f.foto
-                  ? <img src={f.foto} alt={f.nama} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  : <span style={{ fontSize: 40, opacity: 0.3 }}>🏛️</span>
-                }
+                {f.foto ? (
+                  <img 
+                    src={getDirectImageUrl(f.foto)} 
+                    alt={f.nama} 
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    onError={(e) => { 
+                      // Mencegah looping error jika placeholder juga gagal
+                      e.target.onerror = null; 
+                      e.target.src = "https://placehold.co/600x400/002d5d/ffffff?text=Cek+Akses+Drive"; 
+                    }} 
+                  />
+                ) : (
+                  <span style={{ fontSize: 40, opacity: 0.3 }}>🏛️</span>
+                )}
                 <span style={{
                   position: "absolute", top: 8, right: 8, padding: "3px 10px",
                   borderRadius: 20, fontSize: 11, fontWeight: 600,
