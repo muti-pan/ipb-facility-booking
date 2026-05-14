@@ -4,10 +4,10 @@ import AdminBookings from "./AdminBookings";
 import AdminFacilities from "./AdminFacilities";
 import AdminAddFacility from "./AdminAddFacility";
 
+// "Tambah Fasilitas" dihapus dari NAV — akses hanya via tombol di halaman Kelola Fasilitas
 const NAV = [
-  { id: "bookings", label: "Permintaan Persetujuan", icon: "📋" },
-  { id: "facilities", label: "Kelola Fasilitas", icon: "🏛️" },
-  { id: "add", label: "Tambah Fasilitas", icon: "➕" },
+  { id: "bookings",    label: "Permintaan Persetujuan", icon: "📋" },
+  { id: "facilities",  label: "Kelola Fasilitas",       icon: "🏛️" },
 ];
 
 export default function AdminDashboard() {
@@ -33,9 +33,9 @@ export default function AdminDashboard() {
   const initials = user?.nama?.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
 
   const PAGE_TITLES = {
-    bookings: "Permintaan Persetujuan",
+    bookings:   "Permintaan Persetujuan",
     facilities: "Kelola Fasilitas",
-    add: "Tambah Fasilitas Baru",
+    add:        "Tambah Fasilitas Baru",
   };
 
   return (
@@ -56,7 +56,7 @@ export default function AdminDashboard() {
           {NAV.map(item => (
             <button
               key={item.id}
-              className={`sidebar-item ${page === item.id ? "active" : ""}`}
+              className={`sidebar-item ${page === item.id || (page === "add" && item.id === "facilities") ? "active" : ""}`}
               onClick={() => setPage(item.id)}
             >
               <span>{item.icon}</span>
@@ -117,18 +117,24 @@ export default function AdminDashboard() {
           {/* Stats quick view */}
           {stats && (
             <div style={{ display: "flex", gap: 12 }}>
-              <StatPill label="Menunggu" value={stats.menunggu} color="var(--status-pending)" />
+              <StatPill label="Menunggu"  value={stats.menunggu}  color="var(--status-pending)"  />
               <StatPill label="Disetujui" value={stats.disetujui} color="var(--status-approved)" />
-              <StatPill label="Ditolak" value={stats.ditolak} color="var(--status-rejected)" />
+              <StatPill label="Ditolak"   value={stats.ditolak}   color="var(--status-rejected)" />
             </div>
           )}
         </div>
 
         {/* Content */}
         <div className="admin-content">
-          {page === "bookings" && <AdminBookings onRefreshStats={loadStats} />}
-          {page === "facilities" && <AdminFacilities onAdd={() => setPage("add")} />}
-          {page === "add" && <AdminAddFacility onSuccess={() => { setPage("facilities"); loadStats(); }} />}
+          {page === "bookings"    && <AdminBookings onRefreshStats={loadStats} />}
+          {page === "facilities"  && (
+            <AdminFacilities onAdd={() => setPage("add")} />
+          )}
+          {page === "add" && (
+            <AdminAddFacility
+              onSuccess={() => { setPage("facilities"); loadStats(); }}
+            />
+          )}
         </div>
       </div>
     </div>

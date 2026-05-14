@@ -1,5 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { apiFetch } from "../../App";
+
+// Format waktu real-time sesuai zona waktu lokal laptop
+function formatWaktuSekarang(date) {
+  return date.toLocaleDateString("id-ID", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }) + ", " + date.toLocaleTimeString("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+}
 
 export default function BookingForm({ facility, onSuccess, onBack }) {
   const today = new Date().toISOString().split("T")[0];
@@ -17,6 +31,17 @@ export default function BookingForm({ facility, onSuccess, onBack }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+
+  // State untuk jam real-time
+  const [waktuSekarang, setWaktuSekarang] = useState(new Date());
+
+  // Update jam setiap detik mengikuti jam laptop
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setWaktuSekarang(new Date());
+    }, 1000);
+    return () => clearInterval(timer); // bersihkan interval saat komponen unmount
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -70,6 +95,24 @@ export default function BookingForm({ facility, onSuccess, onBack }) {
       <div style={{ marginBottom: 16, padding: "12px 14px", background: "var(--surface-2)", borderRadius: "var(--radius-md)", fontSize: 13 }}>
         <strong>{facility.nama}</strong>
         <span style={{ color: "var(--text-muted)", marginLeft: 8 }}>{facility.fakultas}</span>
+      </div>
+
+      {/* Waktu pengajuan real-time */}
+      <div style={{
+        marginBottom: 16,
+        padding: "10px 14px",
+        background: "var(--surface-2)",
+        borderRadius: "var(--radius-md)",
+        fontSize: 13,
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        border: "1px solid var(--border)",
+      }}>
+        <span style={{ color: "var(--text-muted)" }}>🕐 Waktu Pengajuan:</span>
+        <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>
+          {formatWaktuSekarang(waktuSekarang)}
+        </span>
       </div>
 
       {error && <div className="error-msg">{error}</div>}
