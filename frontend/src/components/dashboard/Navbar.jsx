@@ -165,7 +165,7 @@ export default function Navbar({ onSearch, searchValue }) {
                 </div>
               </div>
               <div className="dropdown-item danger" onClick={logout}>
-                <span>⎋</span> Logout
+                Logout
               </div>
             </div>
           )}
