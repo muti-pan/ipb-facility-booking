@@ -18,7 +18,8 @@ def get_all_bookings(
 ):
     query = db.query(Booking).options(
         joinedload(Booking.fasilitas),
-        joinedload(Booking.mahasiswa)
+        joinedload(Booking.mahasiswa),
+        joinedload(Booking.cancellation)
     )
     if status:
         query = query.filter(Booking.status == status)

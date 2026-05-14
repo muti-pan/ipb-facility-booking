@@ -64,6 +64,13 @@ def create_booking(
     if not facility:
         raise HTTPException(status_code=404, detail="Fasilitas tidak ditemukan")
 
+    def time_to_minutes(t: str) -> int:
+        h, m = map(int, t.split(":"))
+        return h * 60 + m
+
+    if time_to_minutes(booking_data.jam_mulai) >= time_to_minutes(booking_data.jam_selesai):
+        raise HTTPException(status_code=400, detail="Jam selesai harus setelah jam mulai")
+
     # ✅ Conflict detection
     has_conflict = check_schedule_conflict(
         db=db,

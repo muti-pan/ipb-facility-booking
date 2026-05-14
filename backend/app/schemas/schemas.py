@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, EmailStr, field_validator, model_validator
 from typing import Optional, List
 from datetime import datetime
 from app.models.models import UserRole, BookingStatus
@@ -117,6 +117,18 @@ class BookingCreate(BaseModel):
             raise ValueError("Tanggal peminjaman tidak boleh di masa lalu")
         return v
 
+    @model_validator(mode="after")
+    @classmethod
+    def validate_time_range(cls, values):
+        def time_to_minutes(t: str) -> int:
+            h, m = map(int, t.split(":"))
+            return h * 60 + m
+
+        if time_to_minutes(values.jam_mulai) >= time_to_minutes(values.jam_selesai):
+            raise ValueError("Jam selesai harus setelah jam mulai")
+
+        return values
+
 
 class BookingResponse(BaseModel):
     id: int
@@ -129,6 +141,7 @@ class BookingResponse(BaseModel):
     lampiran_surat: Optional[str]
     status: BookingStatus
     alasan_penolakan: Optional[str]
+    cancellation_id: Optional[int] = None
     created_at: datetime
     fasilitas: Optional[FacilityResponse]
 
