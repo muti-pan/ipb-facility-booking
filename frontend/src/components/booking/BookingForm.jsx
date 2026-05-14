@@ -48,8 +48,30 @@ export default function BookingForm({ facility, onSuccess, onBack }) {
     setError("");
     setLoading(true);
 
+    const bookingStart = new Date(`${form.tanggal_peminjaman}T${form.jam_mulai}`);
+    const now = new Date();
+    const diffHours = (bookingStart - now) / (1000 * 60 * 60);
+
+    if (diffHours < 24) {
+      setError("Peminjaman ruangan harus dilakukan minimal 1x24 jam sebelum kegiatan dimulai.");
+      setLoading(false);
+      return; 
+    }
+
     if (form.jam_mulai >= form.jam_selesai) {
-      setError("Jam selesai harus setelah jam mulai");
+      setError("Waktu selesai harus lebih dari waktu mulai.");
+      setLoading(false);
+      return;
+    }
+
+    if (!form.kegiatan_organisasi || form.kegiatan_organisasi.trim() === "") {
+      setError("Isi Nama UKM/Organisasi/Lembaga terlebih dahulu.");
+      setLoading(false);
+      return;
+    }
+
+    if (!form.lampiran_surat || form.lampiran_surat.trim() === "") {
+      setError("Sertakan Link Google Drive Lampiran Surat Peminjaman.");
       setLoading(false);
       return;
     }
@@ -72,7 +94,8 @@ export default function BookingForm({ facility, onSuccess, onBack }) {
       setSuccess(true);
       setTimeout(onSuccess, 2000);
     } catch (err) {
-      setError(err.message);
+      setError("Terjadi kesalahan sistem saat mengirim data. Coba lagi.");
+      console.error("Error API:", err);
     } finally {
       setLoading(false);
     }
@@ -91,7 +114,7 @@ export default function BookingForm({ facility, onSuccess, onBack }) {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} noValidate>
       <div style={{ marginBottom: 16, padding: "12px 14px", background: "var(--surface-2)", borderRadius: "var(--radius-md)", fontSize: 13 }}>
         <strong>{facility.nama}</strong>
         <span style={{ color: "var(--text-muted)", marginLeft: 8 }}>{facility.fakultas}</span>
