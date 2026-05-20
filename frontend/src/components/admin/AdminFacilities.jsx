@@ -211,7 +211,11 @@ export default function AdminFacilities({ onAdd }) {
                 </div>
                 <div className="form-group">
                   <label className="form-label">Fakultas *</label>
-                  <input className="form-input" value={form.fakultas || ""} onChange={e => setForm(p => ({ ...p, fakultas: e.target.value }))} />
+                  <select className="form-select" value={form.fakultas || "FAPERTA"} onChange={e => setForm(p => ({ ...p, fakultas: e.target.value }))}>
+                    {["FAPERTA","SKHB","FPIK","FAPET","FAHUTAN","FATETA","FMIPA","FEM","FEMA","KEDOKTERAN","SSMI","SB","SV","Umum"].map(f => (
+                      <option key={f} value={f}>{f}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
