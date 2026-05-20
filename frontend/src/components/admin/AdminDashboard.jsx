@@ -44,11 +44,9 @@ export default function AdminDashboard() {
       <aside className="admin-sidebar">
         <div className="sidebar-brand">
           <div className="sidebar-logo">
-            <div className="sidebar-logo-icon">IPB</div>
-            <div>
-              <div className="sidebar-logo-text">IPB Facility</div>
-              <div className="sidebar-logo-sub">Panel Admin</div>
-            </div>
+            <a href="https://www.ipb.ac.id/" target="_blank" rel="noopener">
+              <img src="https://www.ipb.ac.id/wp-content/uploads/2023/12/Logo-IPB-University_Horizontal-Putih.png" alt="IPB University" style={{ height: 44, objectFit: "contain" }} />
+            </a>
           </div>
         </div>
 
