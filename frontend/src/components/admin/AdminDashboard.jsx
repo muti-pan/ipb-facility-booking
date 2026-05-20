@@ -109,7 +109,7 @@ export default function AdminDashboard() {
             <div className="admin-topbar-title">{PAGE_TITLES[page]}</div>
             {stats && (
               <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
-                {stats.total} total · {stats.menunggu} menunggu · {stats.disetujui} disetujui
+                {stats.total} total · {stats.menunggu} menunggu persetujuan · {stats.disetujui} disetujui
               </div>
             )}
           </div>
@@ -117,7 +117,7 @@ export default function AdminDashboard() {
           {/* Stats quick view */}
           {stats && (
             <div style={{ display: "flex", gap: 12 }}>
-              <StatPill label="Menunggu"  value={stats.menunggu}  color="var(--status-pending)"  />
+              <StatPill label="Menunggu Persetujuan"  value={stats.menunggu}  color="var(--status-pending)"  />
               <StatPill label="Disetujui" value={stats.disetujui} color="var(--status-approved)" />
               <StatPill label="Ditolak"   value={stats.ditolak}   color="var(--status-rejected)" />
             </div>

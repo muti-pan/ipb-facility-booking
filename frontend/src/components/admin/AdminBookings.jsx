@@ -162,7 +162,7 @@ export default function AdminBookings({ onRefreshStats }) {
       <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
         {[
           { value: "all",       label: "Semua" },
-          { value: "menunggu",  label: "Menunggu" },
+          { value: "menunggu",  label: "Menunggu Persetujuan" },
           { value: "disetujui", label: "Disetujui" },
           { value: "ditolak",   label: "Ditolak" },
         ].map(tab => (
