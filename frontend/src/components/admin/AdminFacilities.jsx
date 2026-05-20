@@ -59,6 +59,13 @@ export default function AdminFacilities({ onAdd }) {
       setError("Semua field wajib diisi");
       return;
     }
+    if (form.kontak_pj) {
+      const digits = form.kontak_pj.replace(/\D/g, "");
+      if (digits.length < 8 || digits.length > 13) {
+        setError("Nomor telepon harus terdiri dari 8 hingga 13 digit angka");
+        return;
+      }
+    }
     setSaving(true);
     try {
       await apiFetch(`/facilities/${editTarget.id}`, {
@@ -240,7 +247,26 @@ export default function AdminFacilities({ onAdd }) {
 
               <div className="form-group">
                 <label className="form-label">Kontak PJ</label>
-                <input className="form-input" value={form.kontak_pj || ""} onChange={e => setForm(p => ({ ...p, kontak_pj: e.target.value }))} placeholder="wa.me/628..." />
+                <input
+                  className="form-input"
+                  value={form.kontak_pj || ""}
+                  onChange={e => {
+                    const val = e.target.value.replace(/\D/g, "").slice(0, 13);
+                    setForm(p => ({ ...p, kontak_pj: val }));
+                  }}
+                  placeholder="Nomor telepon 8–13 digit"
+                  maxLength={13}
+                  inputMode="numeric"
+                />
+                {form.kontak_pj && (
+                  <div style={{
+                    fontSize: 11, marginTop: 4,
+                    color: form.kontak_pj.length >= 8 && form.kontak_pj.length <= 13
+                      ? "var(--status-approved, green)" : "var(--status-rejected, red)"
+                  }}>
+                    {form.kontak_pj.length}/13 digit
+                  </div>
+                )}
               </div>
 
               <div className="form-group">
