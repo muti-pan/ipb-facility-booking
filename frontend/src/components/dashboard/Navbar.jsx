@@ -75,13 +75,31 @@ export default function Navbar({ onSearch, searchValue }) {
   };
 
   return (
-    <nav className="navbar">
-      <div className="navbar-brand">
-        <div className="navbar-logo-placeholder">IPB</div>
+    <nav className="navbar" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      {/* KIRI: Logo & Search Bar */}
+      <div className="navbar-left" style={{ display: "flex", alignItems: "center", flex: 1 }}>
+        <div className="navbar-brand">
+          <div className="navbar-logo-placeholder">IPB</div>
+        </div>
+
+        <div style={{ flex: 1, maxWidth: 300, marginLeft: "20px" }}>
+          {onSearch && (
+            <div className="search-input-wrap">
+              <SearchIcon />
+              <input
+                className="search-input"
+                placeholder="Cari fasilitas..."
+                value={searchValue || ""}
+                onChange={e => onSearch(e.target.value)}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
+      {/* TENGAH: Menu Navigasi Beranda & Riwayat */}
       {setPage && (
-        <div className="navbar-nav">
+        <div className="navbar-nav" style={{ display: "flex", justifyContent: "center", flex: 1 }}>
           <button
             className={`nav-btn ${page === "home" ? "active" : ""}`}
             onClick={() => setPage("home")}
@@ -97,21 +115,8 @@ export default function Navbar({ onSearch, searchValue }) {
         </div>
       )}
 
-      {onSearch && (
-        <div style={{ flex: 1, maxWidth: 400, margin: "0 12px" }}>
-          <div className="search-input-wrap">
-            <SearchIcon />
-            <input
-              className="search-input"
-              placeholder="Cari fasilitas..."
-              value={searchValue || ""}
-              onChange={e => onSearch(e.target.value)}
-            />
-          </div>
-        </div>
-      )}
-
-      <div className="navbar-right">
+      {/* KANAN: Notifikasi & Avatar */}
+      <div className="navbar-right" style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", flex: 1 }}>
         {/* Notifications */}
         <div ref={notifRef} style={{ position: "relative" }}>
           <button className="notif-btn" onClick={() => setShowNotifs(!showNotifs)}>
@@ -152,7 +157,7 @@ export default function Navbar({ onSearch, searchValue }) {
         </div>
 
         {/* Avatar */}
-        <div ref={avatarRef} style={{ position: "relative" }}>
+        <div ref={avatarRef} style={{ position: "relative", marginLeft: "12px" }}>
           <button className="avatar-btn" onClick={() => setShowDropdown(!showDropdown)}>
             {initials}
           </button>
