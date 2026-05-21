@@ -44,11 +44,9 @@ export default function AdminDashboard() {
       <aside className="admin-sidebar">
         <div className="sidebar-brand">
           <div className="sidebar-logo">
-            <div className="sidebar-logo-icon">IPB</div>
-            <div>
-              <div className="sidebar-logo-text">IPB Facility</div>
-              <div className="sidebar-logo-sub">Panel Admin</div>
-            </div>
+            <a href="https://www.ipb.ac.id/" target="_blank" rel="noopener">
+              <img src="https://www.ipb.ac.id/wp-content/uploads/2023/12/Logo-IPB-University_Horizontal-Putih.png" alt="IPB University" style={{ height: 44, objectFit: "contain" }} />
+            </a>
           </div>
         </div>
 
@@ -109,7 +107,7 @@ export default function AdminDashboard() {
             <div className="admin-topbar-title">{PAGE_TITLES[page]}</div>
             {stats && (
               <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
-                {stats.total} total · {stats.menunggu} menunggu · {stats.disetujui} disetujui
+                {stats.total} total · {stats.menunggu} menunggu persetujuan · {stats.disetujui} disetujui
               </div>
             )}
           </div>
@@ -117,7 +115,7 @@ export default function AdminDashboard() {
           {/* Stats quick view */}
           {stats && (
             <div style={{ display: "flex", gap: 12 }}>
-              <StatPill label="Menunggu"  value={stats.menunggu}  color="var(--status-pending)"  />
+              <StatPill label="Menunggu Persetujuan"  value={stats.menunggu}  color="var(--status-pending)"  />
               <StatPill label="Disetujui" value={stats.disetujui} color="var(--status-approved)" />
               <StatPill label="Ditolak"   value={stats.ditolak}   color="var(--status-rejected)" />
             </div>

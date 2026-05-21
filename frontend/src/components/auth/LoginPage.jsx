@@ -35,7 +35,9 @@ export default function LoginPage() {
       <div className="login-content">
         <div className="login-card">
           <div className="login-logo">
-            <div className="login-logo-circle">IPB</div>
+            <a href="https://www.ipb.ac.id/" target="_blank" rel="noopener">
+              <img src="https://www.ipb.ac.id/wp-content/uploads/2023/12/Logo-IPB-University_Horizontal-Putih.png" alt="IPB University" style={{ height: 52, objectFit: "contain", marginBottom: 8 }} />
+            </a>
             <div className="login-title">IPB Facility</div>
             <div className="login-subtitle">Sistem Peminjaman Fasilitas Kampus</div>
           </div>

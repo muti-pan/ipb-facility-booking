@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { apiFetch } from "../../App";
 
-const FAKULTAS_LIST = ["FMIPA", "Pertanian", "FEM", "Umum", "FAPERTA", "FAHUTAN", "FPIK", "FKH", "FAPET", "FATETA", "SB", "SV"];
+const FAKULTAS_LIST = ["FAPERTA", "SKHB", "FPIK", "FAPET", "FAHUTAN", "FATETA", "FMIPA", "FEM", "FEMA", "KEDOKTERAN", "SSMI", "SB", "SV", "Umum"];
 
 export default function AdminAddFacility({ onSuccess }) {
   const [form, setForm] = useState({
@@ -12,7 +12,7 @@ export default function AdminAddFacility({ onSuccess }) {
     deskripsi: "",
     penanggung_jawab: "",
     kontak_pj: "",
-    fakultas: "FMIPA",
+    fakultas: "FAPERTA",
     foto: "",
   });
   const [loading, setLoading] = useState(false);
