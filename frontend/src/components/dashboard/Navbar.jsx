@@ -95,7 +95,7 @@ export default function Navbar({ onSearch, searchValue }) {
   return (
     <nav className="navbar">
       <div className="navbar-brand">
-        <img src="/logoipb.png" alt="IPB University" style={{ height: 38, objectFit: "contain" }} />
+        <img src="https://www.ipb.ac.id/wp-content/uploads/2023/12/Logo-IPB-University_Horizontal-Putih.png" alt="IPB University" style={{ height: 38, objectFit: "contain" }} />
       </div>
 
       {setPage && (
