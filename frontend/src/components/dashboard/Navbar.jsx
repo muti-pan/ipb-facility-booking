@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useAuth, apiFetch } from "../../App";
 
 function BellIcon() {
@@ -69,15 +69,33 @@ export default function Navbar({ onSearch, searchValue }) {
 
   const initials = user?.nama?.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
 
-  const formatTime = (dt) => {
-    const d = new Date(dt);
-    return d.toLocaleDateString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-  };
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    const tick = setInterval(() => setNow(Date.now()), 30000);
+    return () => clearInterval(tick);
+  }, []);
+
+  const formatTime = useCallback((dt) => {
+    if (!dt) return "";
+    const hasTimezone = /[Z+\-]\d*$/.test(dt) || dt.endsWith("Z");
+    const date = new Date(hasTimezone ? dt : dt + "Z");
+    const diffMs = now - date.getTime();
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHour = Math.floor(diffMin / 60);
+    const diffDay = Math.floor(diffHour / 24);
+    if (diffSec < 60) return "Baru saja";
+    if (diffMin < 60) return `${diffMin} menit lalu`;
+    if (diffHour < 24) return `${diffHour} jam lalu`;
+    if (diffDay < 7) return `${diffDay} hari lalu`;
+    return date.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+  }, [now]);
 
   return (
     <nav className="navbar">
       <div className="navbar-brand">
-        <div className="navbar-logo-placeholder">IPB</div>
+        <img src="https://www.ipb.ac.id/wp-content/uploads/2023/12/Logo-IPB-University_Horizontal-Putih.png" alt="IPB University" style={{ height: 38, objectFit: "contain" }} />
       </div>
 
       {setPage && (
@@ -97,8 +115,8 @@ export default function Navbar({ onSearch, searchValue }) {
         </div>
       )}
 
-      {onSearch && (
-        <div style={{ flex: 1, maxWidth: 400, margin: "0 12px" }}>
+      <div style={{ flex: 1, maxWidth: 400, margin: "0 12px" }}>
+        {onSearch && (
           <div className="search-input-wrap">
             <SearchIcon />
             <input
@@ -108,8 +126,8 @@ export default function Navbar({ onSearch, searchValue }) {
               onChange={e => onSearch(e.target.value)}
             />
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       <div className="navbar-right">
         {/* Notifications */}
@@ -165,7 +183,7 @@ export default function Navbar({ onSearch, searchValue }) {
                 </div>
               </div>
               <div className="dropdown-item danger" onClick={logout}>
-                <span>⎋</span> Logout
+                Logout
               </div>
             </div>
           )}

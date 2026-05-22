@@ -9,16 +9,31 @@ const STATUS_CONFIG = {
   menunggu_batal: { label: "Menunggu Batal",        class: "badge-cancelling" },
 };
 
+// Konversi string UTC dari backend ke WIB (UTC+7)
+// Backend menyimpan waktu UTC tanpa suffix "Z", sehingga perlu ditambahkan
+// agar browser tidak salah interpretasi sebagai waktu lokal
+function parseWIB(dateStr) {
+  if (!dateStr) return null;
+  const hasTimezone = /[Z+\-]\d*$/.test(dateStr) || dateStr.endsWith("Z");
+  const utcStr = hasTimezone ? dateStr : dateStr + "Z";
+  return new Date(utcStr);
+}
+
 function formatDate(d) {
-  if (!d) return "—";
-  return new Date(d).toLocaleDateString("id-ID", {
-    day: "numeric", month: "short", year: "numeric",
-  }) + " " + new Date(d).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+  const date = parseWIB(d);
+  if (!date) return "—";
+  return (
+    date.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) +
+    " " +
+    date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) +
+    " WIB"
+  );
 }
 
 function formatDateOnly(d) {
-  if (!d) return "—";
-  return new Date(d).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+  const date = parseWIB(d);
+  if (!date) return "—";
+  return date.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
 }
 
 export default function AdminBookings({ onRefreshStats }) {
@@ -31,17 +46,39 @@ export default function AdminBookings({ onRefreshStats }) {
   const [processing, setProcessing]   = useState(false);
   const [toast, setToast]             = useState("");
 
+  const [pendingCount, setPendingCount] = useState(0);
+
+  const loadPendingCount = async () => {
+    try {
+      const data = await apiFetch("/admin/bookings?status=menunggu");
+      setPendingCount(Array.isArray(data) ? data.length : 0);
+    } catch {}
+  };
+
   const load = async () => {
     setLoading(true);
     try {
       const params = filterStatus !== "all" ? `?status=${filterStatus}` : "";
       const data = await apiFetch(`/admin/bookings${params}`);
       setBookings(data);
+      if (filterStatus === "menunggu") {
+        setPendingCount(Array.isArray(data) ? data.length : 0);
+      }
     } catch {}
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, [filterStatus]);
+  useEffect(() => {
+    load();
+    loadPendingCount();
+  }, []);
+
+  useEffect(() => {
+    load();
+    if (filterStatus !== "menunggu") {
+      loadPendingCount();
+    }
+  }, [filterStatus]);
 
   const showToast = (msg) => {
     setToast(msg);
@@ -57,6 +94,7 @@ export default function AdminBookings({ onRefreshStats }) {
       });
       setSelected(null);
       await load();
+      await loadPendingCount();
       onRefreshStats?.();
       showToast("✅ Peminjaman berhasil disetujui");
     } catch (e) {
@@ -97,6 +135,7 @@ export default function AdminBookings({ onRefreshStats }) {
       setRejectReason("");
       setSelected(null);
       await load();
+      await loadPendingCount();
       onRefreshStats?.();
       showToast("Peminjaman ditolak");
     } catch (e) {
@@ -105,12 +144,8 @@ export default function AdminBookings({ onRefreshStats }) {
     setProcessing(false);
   };
 
-  const pending = bookings.filter(b => b.status === "menunggu");
-  const others  = bookings.filter(b => b.status !== "menunggu");
-
   return (
     <div>
-      {/* Toast */}
       {toast && (
         <div style={{
           position: "fixed", top: 20, right: 20, zIndex: 9999,
@@ -128,7 +163,7 @@ export default function AdminBookings({ onRefreshStats }) {
         {[
 <<<<<<< Updated upstream
           { value: "all",       label: "Semua" },
-          { value: "menunggu",  label: "Menunggu" },
+          { value: "menunggu",  label: "Menunggu Persetujuan" },
           { value: "disetujui", label: "Disetujui" },
           { value: "ditolak",   label: "Ditolak" },
 =======
@@ -151,12 +186,12 @@ export default function AdminBookings({ onRefreshStats }) {
             }}
           >
             {tab.label}
-            {tab.value === "menunggu" && pending.length > 0 && (
+            {tab.value === "menunggu" && pendingCount > 0 && (
               <span style={{
                 marginLeft: 6, background: "var(--status-pending)",
                 color: "white", borderRadius: 10, padding: "1px 6px", fontSize: 11
               }}>
-                {pending.length}
+                {pendingCount}
               </span>
             )}
           </button>
@@ -199,6 +234,7 @@ export default function AdminBookings({ onRefreshStats }) {
                       <div style={{ fontSize: 13 }}>{b.mahasiswa?.nama || "—"}</div>
                       <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{b.mahasiswa?.nim || ""}</div>
                     </td>
+                    {/* Waktu pengajuan dalam WIB */}
                     <td style={{ fontSize: 13 }}>{formatDate(b.created_at)}</td>
                     <td>
                       <div style={{ fontSize: 13 }}>{formatDateOnly(b.tanggal_peminjaman)}</div>

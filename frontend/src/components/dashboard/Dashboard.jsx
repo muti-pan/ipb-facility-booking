@@ -4,7 +4,7 @@ import Navbar from "./Navbar";
 import FacilityCard from "../facilities/FacilityCard";
 import FacilityModal from "../facilities/FacilityModal";
 
-const FAKULTAS_OPTIONS = ["Semua", "FMIPA", "Pertanian", "FEM", "Umum", "FAPERTA", "FAHUTAN", "FPIK", "FKH", "FAPET", "FATETA", "SB", "SV"];
+const FAKULTAS_OPTIONS = ["Semua", "FAPERTA", "SKHB", "FPIK", "FAPET", "FAHUTAN", "FATETA", "FMIPA", "FEM", "FEMA", "KEDOKTERAN", "SSMI", "SB", "SV", "Umum"];
 
 export default function Dashboard() {
   const [facilities, setFacilities] = useState([]);

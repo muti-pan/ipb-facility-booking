@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { apiFetch } from "../../App";
 
-const FAKULTAS_LIST = ["FMIPA", "Pertanian", "FEM", "Umum", "FAPERTA", "FAHUTAN", "FPIK", "FKH", "FAPET", "FATETA", "SB", "SV"];
+const FAKULTAS_LIST = ["FAPERTA", "SKHB", "FPIK", "FAPET", "FAHUTAN", "FATETA", "FMIPA", "FEM", "FEMA", "KEDOKTERAN", "SSMI", "SB", "SV", "Umum"];
 
 export default function AdminAddFacility({ onSuccess }) {
   const [form, setForm] = useState({
@@ -12,7 +12,7 @@ export default function AdminAddFacility({ onSuccess }) {
     deskripsi: "",
     penanggung_jawab: "",
     kontak_pj: "",
-    fakultas: "FMIPA",
+    fakultas: "FAPERTA",
     foto: "",
   });
   const [loading, setLoading] = useState(false);
@@ -20,6 +20,12 @@ export default function AdminAddFacility({ onSuccess }) {
   const [success, setSuccess] = useState(false);
 
   const set = (key, val) => setForm(p => ({ ...p, [key]: val }));
+
+  // Hanya izinkan input angka pada kolom nomor telepon
+  const handleKontakChange = (e) => {
+    const val = e.target.value.replace(/\D/g, ""); // hapus karakter bukan angka
+    set("kontak_pj", val);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,6 +38,15 @@ export default function AdminAddFacility({ onSuccess }) {
     if (Number(form.kapasitas_max) <= 0) {
       setError("Kapasitas tidak valid");
       return;
+    }
+
+    // Validasi nomor telepon: wajib 8–13 digit angka
+    if (form.kontak_pj) {
+      const digits = form.kontak_pj.replace(/\D/g, "");
+      if (digits.length < 8 || digits.length > 13) {
+        setError("Nomor telepon harus terdiri dari 8 hingga 13 digit angka");
+        return;
+      }
     }
 
     setLoading(true);
@@ -109,8 +124,30 @@ export default function AdminAddFacility({ onSuccess }) {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Kontak PJ</label>
-            <input className="form-input" placeholder="wa.me/628..." value={form.kontak_pj} onChange={e => set("kontak_pj", e.target.value)} />
+            <label className="form-label">Nomor Telepon PJ</label>
+            <input
+              className="form-input"
+              type="text"
+              inputMode="numeric"
+              placeholder="Contoh: 08123456789"
+              value={form.kontak_pj}
+              onChange={handleKontakChange}
+              minLength={8}
+              maxLength={13}
+            />
+            <p className="form-hint">
+              Masukkan 8–13 digit angka (tanpa tanda +, spasi, atau strip)
+              {form.kontak_pj && (
+                <span style={{
+                  marginLeft: 8,
+                  color: form.kontak_pj.length >= 8 && form.kontak_pj.length <= 13
+                    ? "var(--status-approved, green)"
+                    : "var(--status-rejected, red)"
+                }}>
+                  {form.kontak_pj.length}/13 digit
+                </span>
+              )}
+            </p>
           </div>
 
           <div className="form-group">

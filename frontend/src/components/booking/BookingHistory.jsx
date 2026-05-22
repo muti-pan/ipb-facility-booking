@@ -15,15 +15,53 @@ function formatRupiah(n) {
   return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(n);
 }
 
+// Konversi string UTC dari backend ke WIB (UTC+7)
+// Backend menyimpan waktu UTC tanpa suffix "Z", sehingga perlu ditambahkan
+// agar browser tidak salah interpretasi sebagai waktu lokal
+function parseWIB(dateStr) {
+  if (!dateStr) return null;
+  // Jika sudah ada timezone info, biarkan; jika tidak, anggap UTC
+  const hasTimezone = /[Z+\-]\d*$/.test(dateStr) || dateStr.endsWith("Z");
+  const utcStr = hasTimezone ? dateStr : dateStr + "Z";
+  return new Date(utcStr);
+}
+
 function formatDate(d) {
-  return new Date(d).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+  const date = parseWIB(d);
+
+  if (!date) return "—";
+
+  return date.toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function formatDateTime(d) {
+  const date = parseWIB(d);
+
+  if (!date) return "—";
+
+  return (
+    date.toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }) +
+    "\n" +
+    date.toLocaleTimeString("id-ID", {
+      hour: "2-digit",
+      minute: "2-digit",
+    }) +
+    " WIB"
+  );
 }
 
 export default function BookingHistory() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cancelTarget, setCancelTarget] = useState(null);
-  const [detailTarget, setDetailTarget] = useState(null);
 
   const load = async () => {
     setLoading(true);
@@ -94,10 +132,9 @@ export default function BookingHistory() {
                         <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{b.kegiatan_organisasi}</div>
                       </td>
                       <td>
-                        <div>{formatDate(b.created_at)}</div>
-                        <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
-                          {new Date(b.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
-                        </div>
+                        {/* Waktu pengajuan dalam WIB */}
+                        <div style={{ fontSize: 13, whiteSpace: "pre-line" }}>
+                          {formatDateTime(b.created_at)} </div>
                       </td>
                       <td>
                         <div>{formatDate(b.tanggal_peminjaman)}</div>
