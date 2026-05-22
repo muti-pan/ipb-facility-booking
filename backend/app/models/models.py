@@ -102,6 +102,10 @@ class Booking(Base):
     def cancellation_id(self):
         return self.cancellation.id if self.cancellation else None
 
+    @property
+    def cancellation_lampiran_surat_pembatalan(self):
+        return self.cancellation.lampiran_surat_pembatalan if self.cancellation else None
+
 
 class Approval(Base):
     __tablename__ = "approvals"

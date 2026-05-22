@@ -126,10 +126,18 @@ export default function AdminBookings({ onRefreshStats }) {
       {/* Filter tabs */}
       <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
         {[
+<<<<<<< Updated upstream
           { value: "all",       label: "Semua" },
           { value: "menunggu",  label: "Menunggu" },
           { value: "disetujui", label: "Disetujui" },
           { value: "ditolak",   label: "Ditolak" },
+=======
+          { value: "all",            label: "Semua" },
+          { value: "menunggu",       label: "Menunggu Persetujuan" },
+          { value: "menunggu_batal", label: "Menunggu Batal" },
+          { value: "disetujui",      label: "Disetujui" },
+          { value: "ditolak",        label: "Ditolak" },
+>>>>>>> Stashed changes
         ].map(tab => (
           <button
             key={tab.value}
@@ -234,7 +242,7 @@ export default function AdminBookings({ onRefreshStats }) {
         <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setSelected(null); }}>
           <div className="modal" style={{ maxWidth: 500 }}>
             <div className="modal-header">
-              <span className="modal-title">Permintaan Persetujuan</span>
+              <span className="modal-title">Permintaan Pembatalan</span>
               <button className="modal-close" onClick={() => setSelected(null)}>×</button>
             </div>
             <div className="modal-body">
@@ -246,7 +254,14 @@ export default function AdminBookings({ onRefreshStats }) {
                 <div><strong>Lokasi</strong> &nbsp;&nbsp;&nbsp;&nbsp;: {selected.fasilitas?.nama}</div>
                 <div><strong>Tanggal</strong> &nbsp;: {formatDateOnly(selected.tanggal_peminjaman)}</div>
                 <div><strong>Pukul</strong> &nbsp;&nbsp;&nbsp;&nbsp;: {selected.jam_mulai} — {selected.jam_selesai}</div>
-                {selected.lampiran_surat && (
+                {selected.status === "menunggu_batal" && selected.cancellation_lampiran_surat_pembatalan && (
+                  <div style={{ marginTop: 8 }}>
+                    <a href={selected.cancellation_lampiran_surat_pembatalan} target="_blank" rel="noreferrer" style={{ color: "var(--ipb-blue)", fontSize: 13 }}>
+                      📎 Lihat Surat Pembatalan
+                    </a>
+                  </div>
+                )}
+                {selected.status !== "menunggu_batal" && selected.lampiran_surat && (
                   <div style={{ marginTop: 8 }}>
                     <a href={selected.lampiran_surat} target="_blank" rel="noreferrer" style={{ color: "var(--ipb-blue)", fontSize: 13 }}>
                       📎 Lihat Surat Peminjaman

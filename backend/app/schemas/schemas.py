@@ -142,6 +142,7 @@ class BookingResponse(BaseModel):
     status: BookingStatus
     alasan_penolakan: Optional[str]
     cancellation_id: Optional[int] = None
+    cancellation_lampiran_surat_pembatalan: Optional[str] = None
     created_at: datetime
     fasilitas: Optional[FacilityResponse]
 
