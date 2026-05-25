@@ -161,18 +161,11 @@ export default function AdminBookings({ onRefreshStats }) {
       {/* Filter tabs */}
       <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
         {[
-<<<<<<< Updated upstream
-          { value: "all",       label: "Semua" },
-          { value: "menunggu",  label: "Menunggu Persetujuan" },
-          { value: "disetujui", label: "Disetujui" },
-          { value: "ditolak",   label: "Ditolak" },
-=======
           { value: "all",            label: "Semua" },
           { value: "menunggu",       label: "Menunggu Persetujuan" },
           { value: "menunggu_batal", label: "Menunggu Batal" },
           { value: "disetujui",      label: "Disetujui" },
           { value: "ditolak",        label: "Ditolak" },
->>>>>>> Stashed changes
         ].map(tab => (
           <button
             key={tab.value}
