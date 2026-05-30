@@ -32,14 +32,21 @@ def seed():
         db.add(admin)
 
         # Create test mahasiswa
-        mhs = User(
+        mhs1 = User(
             nama="Budi Mahasiswa",
             email="budi@apps.ipb.ac.id",
             hashed_password=get_password_hash("mhs123"),
             role=UserRole.mahasiswa,
             nim="G6401231001"
         )
-        db.add(mhs)
+        mhs2 = User(
+            nama="Sari Mahasiswi",
+            email="sari@apps.ipb.ac.id",
+            hashed_password=get_password_hash("mhs234"),
+            role=UserRole.mahasiswa,
+            nim="G6401231002"
+        )
+        db.add_all([mhs1, mhs2])
         db.flush()
 
         # Create facilities
@@ -118,7 +125,8 @@ def seed():
         db.commit()
         print("✅ Seed berhasil!")
         print("   Admin: admin@ipb.ac.id / admin123")
-        print("   Mahasiswa: budi@apps.ipb.ac.id / mhs123")
+        print("   Mahasiswa 1: budi@apps.ipb.ac.id / mhs123")
+        print("   Mahasiswa 2: sari@apps.ipb.ac.id / mhs234")
 
     except Exception as e:
         db.rollback()

@@ -130,6 +130,8 @@ DATABASE_URL=sqlite:///./ipb_facility.db
 SECRET_KEY=ganti-dengan-string-random-panjang-32-karakter
 ```
 
+> Catatan: folder `backend/uploads/images` dan `backend/uploads/pdfs` akan dibuat otomatis oleh backend saat dijalankan.
+
 #### 5. Isi data awal (seed)
 ```bash
 python seed.py
@@ -185,10 +187,11 @@ Frontend berjalan di: **http://localhost:5173**
 
 ### 🔑 LOGIN TEST
 
-| Role        | Email                      | Password  |
-|-------------|---------------------------|-----------|
-| **Admin**   | admin@ipb.ac.id           | admin123  |
-| **Mahasiswa** | budi@apps.ipb.ac.id     | mhs123    |
+| Role          | Email                       | Password  |
+|---------------|-----------------------------|-----------|
+| **Admin**     | admin@ipb.ac.id             | admin123  |
+| **Mahasiswa 1** | budi@apps.ipb.ac.id       | mhs123    |
+| **Mahasiswa 2** | sari@apps.ipb.ac.id       | mhs234    |
 
 ---
 
