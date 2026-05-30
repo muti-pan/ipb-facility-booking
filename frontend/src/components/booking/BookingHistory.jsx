@@ -58,6 +58,17 @@ function formatDateTime(d) {
   );
 }
 
+function isPastBookingDate(dateStr) {
+  const date = parseWIB(dateStr);
+  if (!date) return false;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  date.setHours(0, 0, 0, 0);
+
+  return date < today;
+}
+
 export default function BookingHistory() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -74,7 +85,10 @@ export default function BookingHistory() {
 
   useEffect(() => { load(); }, []);
 
-  const canCancel = (status) => ["menunggu", "disetujui"].includes(status);
+  const canCancel = (status, tanggal_peminjaman) => {
+    if (! ["menunggu", "disetujui"].includes(status)) return false;
+    return !isPastBookingDate(tanggal_peminjaman);
+  };
 
   if (loading) {
     return (
@@ -158,7 +172,7 @@ export default function BookingHistory() {
                         )}
                       </td>
                       <td>
-                        {canCancel(b.status) && (
+                        {canCancel(b.status, b.tanggal_peminjaman) && (
                           <button
                             className="btn btn-danger btn-sm"
                             onClick={() => setCancelTarget(b)}

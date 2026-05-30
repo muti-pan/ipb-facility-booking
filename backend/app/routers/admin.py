@@ -25,7 +25,17 @@ def get_all_bookings(
         query = query.filter(Booking.status == status)
 
     # Sort by created_at ascending (FIFO queue)
-    return query.order_by(Booking.created_at.asc()).all()
+    bookings = query.order_by(Booking.created_at.asc()).all()
+
+    # Attach cancellation reason onto booking objects so the Pydantic
+    # response model can include it (BookingResponse.cancellation_alasan).
+    for b in bookings:
+        try:
+            b.cancellation_alasan = b.cancellation.alasan if b.cancellation else None
+        except Exception:
+            b.cancellation_alasan = None
+
+    return bookings
 
 
 @router.post("/approve", response_model=ApprovalResponse)
@@ -122,6 +132,7 @@ def get_stats(
 ):
     total = db.query(Booking).count()
     menunggu = db.query(Booking).filter(Booking.status == BookingStatus.menunggu).count()
+    menunggu_batal = db.query(Booking).filter(Booking.status == BookingStatus.menunggu_batal).count()
     disetujui = db.query(Booking).filter(Booking.status == BookingStatus.disetujui).count()
     ditolak = db.query(Booking).filter(Booking.status == BookingStatus.ditolak).count()
     dibatalkan = db.query(Booking).filter(Booking.status == BookingStatus.dibatalkan).count()
@@ -129,6 +140,7 @@ def get_stats(
     return {
         "total": total,
         "menunggu": menunggu,
+        "menunggu_batal": menunggu_batal,
         "disetujui": disetujui,
         "ditolak": ditolak,
         "dibatalkan": dibatalkan,

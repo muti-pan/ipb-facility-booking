@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { apiFetch } from "../../App";
+import { useState, useEffect, useRef } from "react";
+import { apiFetch, apiUpload } from "../../App";
 import { getDirectImageUrl } from "../../utils/formatters";
 
 function formatRupiah(n) {
@@ -18,6 +18,7 @@ export default function AdminFacilities({ onAdd }) {
   const [saving, setSaving]         = useState(false);
   const [error, setError]           = useState("");
   const [toast, setToast]           = useState("");
+  const errorRef = useRef(null);
 
   const load = async () => {
     setLoading(true);
@@ -37,6 +38,12 @@ export default function AdminFacilities({ onAdd }) {
     setTimeout(() => setToast(""), 3000); 
   };
 
+  useEffect(() => {
+    if (error) {
+      errorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [error]);
+
   const openEdit = (f) => {
     setEditTarget(f);
     setForm({
@@ -50,31 +57,79 @@ export default function AdminFacilities({ onAdd }) {
       fakultas: f.fakultas,
       status_fasilitas: f.status_fasilitas,
       foto: f.foto || "",
+      foto_file: null,
     });
     setError("");
   };
 
   const handleSave = async () => {
-    if (!form.nama || !form.kapasitas_max || !form.harga || !form.penanggung_jawab) {
-      setError("Semua field wajib diisi");
+    if (!form.nama || form.nama.trim() === "") {
+      setError("Nama ruangan wajib diisi");
       return;
     }
-    if (form.kontak_pj) {
-      const digits = form.kontak_pj.replace(/\D/g, "");
-      if (digits.length < 8 || digits.length > 13) {
-        setError("Nomor telepon harus terdiri dari 8 hingga 13 digit angka");
-        return;
-      }
+
+    const minCapacity = form.kapasitas_min === "" ? null : Number(form.kapasitas_min);
+    const maxCapacity = Number(form.kapasitas_max);
+
+    if (minCapacity !== null && (isNaN(minCapacity) || minCapacity < 0)) {
+      setError("Kapasitas minimal tidak boleh negatif");
+      return;
+    }
+
+    if (!form.kapasitas_max) {
+      setError("Kapasitas maksimal wajib diisi");
+      return;
+    }
+    if (isNaN(maxCapacity) || maxCapacity <= 0) {
+      setError("Kapasitas maksimal harus lebih dari 0");
+      return;
+    }
+    if (minCapacity !== null && minCapacity >= maxCapacity) {
+      setError("Kapasitas maksimal harus lebih besar dari kapasitas minimal");
+      return;
+    }
+
+    if (!form.harga) {
+      setError("Harga peminjaman wajib diisi");
+      return;
+    }
+
+    if (!form.penanggung_jawab || form.penanggung_jawab.trim() === "") {
+      setError("Tujuan surat wajib diisi");
+      return;
+    }
+
+    if (!form.kontak_pj) {
+      setError("Nomor telepon PJ Ruangan wajib diisi");
+      return;
+    }
+    const digits = form.kontak_pj.replace(/\D/g, "");
+    if (digits.length < 8 || digits.length > 13) {
+      setError("Nomor telepon harus terdiri dari 8 hingga 13 digit angka");
+      return;
+    }
+
+    if (!form.deskripsi || form.deskripsi.trim() === "") {
+      setError("Deskripsi ruangan wajib diisi");
+      return;
     }
     setSaving(true);
     try {
+      let fotoUrl = form.foto;
+      if (form.foto_file instanceof File) {
+        const uploadResult = await apiUpload("/uploads/image", form.foto_file);
+        fotoUrl = uploadResult.url;
+      }
+
+      const { foto_file, ...payloadForm } = form;
       await apiFetch(`/facilities/${editTarget.id}`, {
         method: "PUT",
         body: JSON.stringify({
-          ...form,
+          ...payloadForm,
           kapasitas_min: form.kapasitas_min ? Number(form.kapasitas_min) : null,
           kapasitas_max: Number(form.kapasitas_max),
           harga: Number(form.harga),
+          foto: fotoUrl,
         }),
       });
       setEditTarget(null);
@@ -177,7 +232,7 @@ export default function AdminFacilities({ onAdd }) {
                   </span>
                 </div>
                 <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 12 }}>
-                  PJ: {f.penanggung_jawab}
+                  PJ Ruangan: {f.penanggung_jawab}
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
                   <button className="btn btn-secondary btn-sm" style={{ flex: 1 }} onClick={() => openEdit(f)}>
@@ -202,7 +257,7 @@ export default function AdminFacilities({ onAdd }) {
               <button className="modal-close" onClick={() => setEditTarget(null)}>×</button>
             </div>
             <div className="modal-body">
-              {error && <div className="error-msg">{error}</div>}
+              {error && <div className="error-msg" ref={errorRef}>{error}</div>}
 
               <div className="form-row">
                 <div className="form-group">
@@ -222,11 +277,11 @@ export default function AdminFacilities({ onAdd }) {
               <div className="form-row">
                 <div className="form-group">
                   <label className="form-label">Kapasitas Min</label>
-                  <input className="form-input" type="number" value={form.kapasitas_min || ""} onChange={e => setForm(p => ({ ...p, kapasitas_min: e.target.value }))} placeholder="Kosongkan jika tidak ada" />
+                  <input className="form-input" type="number" min="0" value={form.kapasitas_min || ""} onChange={e => setForm(p => ({ ...p, kapasitas_min: e.target.value }))} placeholder="Kosongkan jika tidak ada" />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Kapasitas Max *</label>
-                  <input className="form-input" type="number" value={form.kapasitas_max || ""} onChange={e => setForm(p => ({ ...p, kapasitas_max: e.target.value }))} />
+                  <input className="form-input" type="number" min="1" value={form.kapasitas_max || ""} onChange={e => setForm(p => ({ ...p, kapasitas_max: e.target.value }))} />
                 </div>
               </div>
 
@@ -245,12 +300,12 @@ export default function AdminFacilities({ onAdd }) {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Tujuan Surat (Penanggung Jawab) *</label>
+                <label className="form-label">Tujuan Surat *</label>
                 <input className="form-input" value={form.penanggung_jawab || ""} onChange={e => setForm(p => ({ ...p, penanggung_jawab: e.target.value }))} />
               </div>
 
               <div className="form-group">
-                <label className="form-label">Kontak PJ</label>
+                <label className="form-label">Nomor Telepon PJ Ruangan *</label>
                 <input
                   className="form-input"
                   value={form.kontak_pj || ""}
@@ -261,6 +316,7 @@ export default function AdminFacilities({ onAdd }) {
                   placeholder="Nomor telepon 8–13 digit"
                   maxLength={13}
                   inputMode="numeric"
+                  required
                 />
                 {form.kontak_pj && (
                   <div style={{
@@ -274,13 +330,34 @@ export default function AdminFacilities({ onAdd }) {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Deskripsi Ruangan</label>
-                <textarea className="form-textarea" value={form.deskripsi || ""} onChange={e => setForm(p => ({ ...p, deskripsi: e.target.value }))} />
+                <label className="form-label">Deskripsi Ruangan *</label>
+                <textarea className="form-textarea" value={form.deskripsi || ""} onChange={e => setForm(p => ({ ...p, deskripsi: e.target.value }))} required />
               </div>
 
               <div className="form-group">
-                <label className="form-label">URL Foto Ruangan</label>
-                <input className="form-input" value={form.foto || ""} onChange={e => setForm(p => ({ ...p, foto: e.target.value }))} placeholder="https://..." />
+                <label className="form-label">Foto Ruangan</label>
+                <input
+                  className="form-input"
+                  type="file"
+                  accept="image/*"
+                  onChange={e => {
+                    const file = e.target.files?.[0] || null;
+                    setForm(p => ({ ...p, foto_file: file }));
+                  }}
+                />
+                {form.foto_file && (
+                  <div style={{ marginTop: 8, fontSize: 12, color: "var(--text-muted)" }}>
+                    File dipilih: {form.foto_file.name}
+                  </div>
+                )}
+                {!form.foto_file && form.foto && (
+                  <img
+                    src={form.foto}
+                    alt="Preview"
+                    style={{ marginTop: 8, width: "100%", height: 140, objectFit: "cover", borderRadius: "var(--radius-md)", border: "1px solid var(--border)" }}
+                    onError={e => { e.target.style.display = "none"; }}
+                  />
+                )}
               </div>
 
               <div style={{ display: "flex", gap: 10 }}>

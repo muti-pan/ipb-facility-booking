@@ -1,12 +1,20 @@
-import { useState } from "react";
-import { apiFetch } from "../../App";
+import { useState, useEffect, useRef } from "react";
+import { apiFetch, apiUpload } from "../../App";
 
 export default function CancelModal({ booking, onClose, onSuccess }) {
   const needsLetter = booking.status === "disetujui";
   const [alasan, setAlasan] = useState("");
-  const [surat, setSurat] = useState("");
+  const [surat, setSurat] = useState(null);
+  const [suratNama, setSuratNama] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const errorRef = useRef(null);
+
+  useEffect(() => {
+    if (error) {
+      errorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [error]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -15,18 +23,24 @@ export default function CancelModal({ booking, onClose, onSuccess }) {
       setError("Alasan pembatalan wajib diisi");
       return;
     }
-    if (needsLetter && !surat.trim()) {
+    if (needsLetter && !surat) {
       setError("Surat pembatalan wajib dilampirkan untuk peminjaman yang sudah disetujui");
       return;
     }
     setLoading(true);
     try {
+      let suratUrl = typeof surat === "string" ? surat : null;
+      if (needsLetter && surat instanceof File) {
+        const uploadResult = await apiUpload("/uploads/pdf", surat);
+        suratUrl = uploadResult.url;
+      }
+
       await apiFetch(`/bookings/${booking.id}/cancel`, {
         method: "POST",
         body: JSON.stringify({
           booking_id: booking.id,
           alasan,
-          lampiran_surat_pembatalan: surat || null,
+          lampiran_surat_pembatalan: suratUrl,
         }),
       });
       onSuccess();
@@ -54,7 +68,7 @@ export default function CancelModal({ booking, onClose, onSuccess }) {
             )}
           </div>
 
-          {error && <div className="error-msg">{error}</div>}
+          {error && <div className="error-msg" ref={errorRef}>{error}</div>}
 
           <form onSubmit={handleSubmit}>
             <div className="form-group">
@@ -70,14 +84,23 @@ export default function CancelModal({ booking, onClose, onSuccess }) {
 
             {needsLetter && (
               <div className="form-group">
-                <label className="form-label">Surat Pembatalan (URL PDF)</label>
+                <label className="form-label">Surat Pembatalan (PDF)</label>
                 <input
                   className="form-input"
-                  type="url"
-                  placeholder="https://drive.google.com/..."
-                  value={surat}
-                  onChange={e => setSurat(e.target.value)}
+                  type="file"
+                  accept="application/pdf"
+                  onChange={e => {
+                    const file = e.target.files?.[0] || null;
+                    setSurat(file);
+                    setSuratNama(file?.name || "");
+                  }}
                 />
+                {suratNama && (
+                  <div style={{ marginTop: 8, fontSize: 12, color: "var(--text-muted)" }}>
+                    File dipilih: {suratNama}
+                  </div>
+                )}
+                <p className="form-hint">Unggah file PDF surat pembatalan langsung dari perangkat Anda.</p>
               </div>
             )}
 

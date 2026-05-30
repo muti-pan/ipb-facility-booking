@@ -47,11 +47,16 @@ export default function AdminBookings({ onRefreshStats }) {
   const [toast, setToast]             = useState("");
 
   const [pendingCount, setPendingCount] = useState(0);
+  const [statusCounts, setStatusCounts] = useState({ menunggu: 0, menunggu_batal: 0 });
 
-  const loadPendingCount = async () => {
+  const loadStatusCounts = async () => {
     try {
-      const data = await apiFetch("/admin/bookings?status=menunggu");
-      setPendingCount(Array.isArray(data) ? data.length : 0);
+      const data = await apiFetch("/admin/stats");
+      setStatusCounts({
+        menunggu: data.menunggu || 0,
+        menunggu_batal: data.menunggu_batal || 0,
+      });
+      setPendingCount((data.menunggu || 0) + (data.menunggu_batal || 0));
     } catch {}
   };
 
@@ -61,23 +66,18 @@ export default function AdminBookings({ onRefreshStats }) {
       const params = filterStatus !== "all" ? `?status=${filterStatus}` : "";
       const data = await apiFetch(`/admin/bookings${params}`);
       setBookings(data);
-      if (filterStatus === "menunggu") {
-        setPendingCount(Array.isArray(data) ? data.length : 0);
-      }
     } catch {}
     setLoading(false);
   };
 
   useEffect(() => {
     load();
-    loadPendingCount();
+    loadStatusCounts();
   }, []);
 
   useEffect(() => {
     load();
-    if (filterStatus !== "menunggu") {
-      loadPendingCount();
-    }
+    loadStatusCounts();
   }, [filterStatus]);
 
   const showToast = (msg) => {
@@ -94,7 +94,7 @@ export default function AdminBookings({ onRefreshStats }) {
       });
       setSelected(null);
       await load();
-      await loadPendingCount();
+      await loadStatusCounts();
       onRefreshStats?.();
       showToast("✅ Peminjaman berhasil disetujui");
     } catch (e) {
@@ -111,6 +111,7 @@ export default function AdminBookings({ onRefreshStats }) {
       });
       setSelected(null);
       await load();
+      await loadStatusCounts();
       onRefreshStats?.();
       showToast("✅ Pembatalan berhasil disetujui");
     } catch (e) {
@@ -135,7 +136,7 @@ export default function AdminBookings({ onRefreshStats }) {
       setRejectReason("");
       setSelected(null);
       await load();
-      await loadPendingCount();
+      await loadStatusCounts();
       onRefreshStats?.();
       showToast("Peminjaman ditolak");
     } catch (e) {
@@ -179,12 +180,12 @@ export default function AdminBookings({ onRefreshStats }) {
             }}
           >
             {tab.label}
-            {tab.value === "menunggu" && pendingCount > 0 && (
+            {(tab.value === "menunggu" || tab.value === "menunggu_batal") && statusCounts[tab.value] > 0 && (
               <span style={{
-                marginLeft: 6, background: "var(--status-pending)",
+                marginLeft: 6, background: tab.value === "menunggu" ? "var(--status-pending)" : "var(--status-cancelling)",
                 color: "white", borderRadius: 10, padding: "1px 6px", fontSize: 11
               }}>
-                {pendingCount}
+                {statusCounts[tab.value]}
               </span>
             )}
           </button>
@@ -249,7 +250,7 @@ export default function AdminBookings({ onRefreshStats }) {
                           className="btn btn-primary btn-sm"
                           onClick={() => setSelected(b)}
                         >
-                          {b.status === "menunggu_batal" ? "Setujui" : "Tinjau"}
+                          Tinjau
                         </button>
                       )}
                       {b.alasan_penolakan && (
@@ -271,7 +272,7 @@ export default function AdminBookings({ onRefreshStats }) {
         <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setSelected(null); }}>
           <div className="modal" style={{ maxWidth: 500 }}>
             <div className="modal-header">
-              <span className="modal-title">Permintaan Pembatalan</span>
+              <span className="modal-title">{selected.status === "menunggu_batal" ? "Permintaan Pembatalan" : "Tinjau Pengajuan"}</span>
               <button className="modal-close" onClick={() => setSelected(null)}>×</button>
             </div>
             <div className="modal-body">
@@ -288,6 +289,12 @@ export default function AdminBookings({ onRefreshStats }) {
                     <a href={selected.cancellation_lampiran_surat_pembatalan} target="_blank" rel="noreferrer" style={{ color: "var(--ipb-blue)", fontSize: 13 }}>
                       📎 Lihat Surat Pembatalan
                     </a>
+                  </div>
+                )}
+                {selected.status === "menunggu_batal" && selected.cancellation_alasan && (
+                  <div style={{ marginTop: 8, fontSize: 13 }}>
+                    <strong>Alasan Pembatalan:</strong>
+                    <div style={{ marginTop: 6, color: "var(--text-muted)" }}>{selected.cancellation_alasan}</div>
                   </div>
                 )}
                 {selected.status !== "menunggu_batal" && selected.lampiran_surat && (
@@ -316,7 +323,7 @@ export default function AdminBookings({ onRefreshStats }) {
                   onClick={() => selected.status === "menunggu_batal" ? handleApproveCancellation(selected.cancellation_id) : handleApprove(selected.id)}
                   disabled={processing}
                 >
-                  {processing ? "Memproses..." : selected.status === "menunggu_batal" ? "Setujui" : "Disetujui"}
+                  {processing ? "Memproses..." : "Setujui"}
                 </button>
               </div>
             </div>

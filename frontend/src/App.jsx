@@ -34,6 +34,26 @@ export async function apiFetch(path, options = {}) {
   return res.json();
 }
 
+export async function apiUpload(path, file) {
+  const token = localStorage.getItem("token");
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    body: formData,
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Upload file gagal" }));
+    throw new Error(err.detail || "Upload file gagal");
+  }
+  return res.json();
+}
+
 // ─── App ──────────────────────────────────────────────────────────────────────
 
 export default function App() {

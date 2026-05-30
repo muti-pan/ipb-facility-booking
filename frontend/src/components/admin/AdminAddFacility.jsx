@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { apiFetch } from "../../App";
+import { useState, useEffect, useRef } from "react";
+import { apiFetch, apiUpload } from "../../App";
 
 const FAKULTAS_LIST = ["FAPERTA", "SKHB", "FPIK", "FAPET", "FAHUTAN", "FATETA", "FMIPA", "FEM", "FEMA", "KEDOKTERAN", "SSMI", "SB", "SV", "Umum"];
 
@@ -14,10 +14,18 @@ export default function AdminAddFacility({ onSuccess }) {
     kontak_pj: "",
     fakultas: "FAPERTA",
     foto: "",
+    foto_file: null,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
   const [success, setSuccess] = useState(false);
+  const errorRef = useRef(null);
+
+  useEffect(() => {
+    if (error) {
+      errorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [error]);
 
   const set = (key, val) => setForm(p => ({ ...p, [key]: val }));
 
@@ -31,26 +39,70 @@ export default function AdminAddFacility({ onSuccess }) {
     e.preventDefault();
     setError("");
 
-    if (!form.nama || !form.kapasitas_max || !form.harga || !form.penanggung_jawab) {
-      setError("Nama Ruangan, Kapasitas, Harga, dan Tujuan Surat wajib diisi");
-      return;
-    }
-    if (Number(form.kapasitas_max) <= 0) {
-      setError("Kapasitas tidak valid");
+    if (!form.nama || form.nama.trim() === "") {
+      setError("Nama ruangan wajib diisi");
       return;
     }
 
-    // Validasi nomor telepon: wajib 8–13 digit angka
-    if (form.kontak_pj) {
-      const digits = form.kontak_pj.replace(/\D/g, "");
-      if (digits.length < 8 || digits.length > 13) {
-        setError("Nomor telepon harus terdiri dari 8 hingga 13 digit angka");
-        return;
-      }
+    const minCapacity = form.kapasitas_min === "" ? null : Number(form.kapasitas_min);
+    const maxCapacity = Number(form.kapasitas_max);
+
+    if (minCapacity !== null && (isNaN(minCapacity) || minCapacity < 0)) {
+      setError("Kapasitas minimal tidak boleh negatif");
+      return;
+    }
+
+    if (!form.kapasitas_max) {
+      setError("Kapasitas maksimal wajib diisi");
+      return;
+    }
+    if (isNaN(maxCapacity) || maxCapacity <= 0) {
+      setError("Kapasitas maksimal harus lebih dari 0");
+      return;
+    }
+    if (minCapacity !== null && minCapacity >= maxCapacity) {
+      setError("Kapasitas maksimal harus lebih besar dari kapasitas minimal");
+      return;
+    }
+
+    if (!form.harga) {
+      setError("Harga peminjaman wajib diisi");
+      return;
+    }
+
+    if (!form.penanggung_jawab || form.penanggung_jawab.trim() === "") {
+      setError("Tujuan surat wajib diisi");
+      return;
+    }
+
+    if (!form.kontak_pj) {
+      setError("Nomor telepon PJ wajib diisi");
+      return;
+    }
+    const digits = form.kontak_pj.replace(/\D/g, "");
+    if (digits.length < 8 || digits.length > 13) {
+      setError("Nomor telepon harus terdiri dari 8 hingga 13 digit angka");
+      return;
+    }
+
+    if (!form.deskripsi || form.deskripsi.trim() === "") {
+      setError("Deskripsi ruangan wajib diisi");
+      return;
+    }
+
+    if (!form.foto_file) {
+      setError("Foto ruangan wajib diunggah");
+      return;
     }
 
     setLoading(true);
     try {
+      let fotoUrl = form.foto || null;
+      if (form.foto_file instanceof File) {
+        const uploadResult = await apiUpload("/uploads/image", form.foto_file);
+        fotoUrl = uploadResult.url;
+      }
+
       await apiFetch("/facilities/", {
         method: "POST",
         body: JSON.stringify({
@@ -62,7 +114,7 @@ export default function AdminAddFacility({ onSuccess }) {
           penanggung_jawab: form.penanggung_jawab,
           kontak_pj: form.kontak_pj || null,
           fakultas: form.fakultas,
-          foto: form.foto || null,
+          foto: fotoUrl,
         }),
       });
       setSuccess(true);
@@ -87,7 +139,7 @@ export default function AdminAddFacility({ onSuccess }) {
     <div style={{ maxWidth: 600, margin: "0 auto" }}>
       <div style={{ background: "var(--surface)", borderRadius: "var(--radius-xl)", padding: 32, boxShadow: "var(--shadow-md)", border: "1px solid var(--border)" }}>
         <form onSubmit={handleSubmit}>
-          {error && <div className="error-msg">{error}</div>}
+          {error && <div className="error-msg" ref={errorRef}>{error}</div>}
 
           <div className="form-group">
             <label className="form-label">1. Nama Ruangan *</label>
@@ -119,12 +171,12 @@ export default function AdminAddFacility({ onSuccess }) {
           </div>
 
           <div className="form-group">
-            <label className="form-label">4. Tujuan Surat (Penanggung Jawab) *</label>
+            <label className="form-label">4. Tujuan Surat *</label>
             <input className="form-input" placeholder="Contoh: Dr. Nama, S.Kom., M.T." value={form.penanggung_jawab} onChange={e => set("penanggung_jawab", e.target.value)} required />
           </div>
 
           <div className="form-group">
-            <label className="form-label">Nomor Telepon PJ</label>
+            <label className="form-label">Nomor Telepon PJ Ruangan *</label>
             <input
               className="form-input"
               type="text"
@@ -134,6 +186,7 @@ export default function AdminAddFacility({ onSuccess }) {
               onChange={handleKontakChange}
               minLength={8}
               maxLength={13}
+              required
             />
             <p className="form-hint">
               Masukkan 8–13 digit angka (tanpa tanda +, spasi, atau strip)
@@ -151,15 +204,29 @@ export default function AdminAddFacility({ onSuccess }) {
           </div>
 
           <div className="form-group">
-            <label className="form-label">5. Deskripsi Ruangan</label>
-            <textarea className="form-textarea" placeholder="Deskripsi lengkap ruangan..." value={form.deskripsi} onChange={e => set("deskripsi", e.target.value)} />
+            <label className="form-label">5. Deskripsi Ruangan *</label>
+            <textarea className="form-textarea" placeholder="Deskripsi lengkap ruangan..." value={form.deskripsi} onChange={e => set("deskripsi", e.target.value)} required />
           </div>
 
           <div className="form-group">
-            <label className="form-label">6. Foto Ruangan (URL)</label>
-            <input className="form-input" type="url" placeholder="https://... (link foto dari Google Drive/Imgur/dll)" value={form.foto} onChange={e => set("foto", e.target.value)} />
-            <p className="form-hint">Upload foto ke Google Drive/Imgur dan tempel URL-nya di sini</p>
-            {form.foto && (
+            <label className="form-label">6. Foto Ruangan *</label>
+            <input
+              className="form-input"
+              type="file"
+              accept="image/*"
+              required
+              onChange={e => {
+                const file = e.target.files?.[0] || null;
+                set("foto_file", file);
+              }}
+            />
+            <p className="form-hint">Unggah file gambar langsung dari perangkat Anda.</p>
+            {form.foto_file && (
+              <div style={{ marginTop: 8, fontSize: 12, color: "var(--text-muted)" }}>
+                File dipilih: {form.foto_file.name}
+              </div>
+            )}
+            {form.foto && !form.foto_file && (
               <img
                 src={form.foto}
                 alt="Preview"

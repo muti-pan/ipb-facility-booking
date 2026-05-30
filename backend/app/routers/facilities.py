@@ -1,12 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
+from pathlib import Path
 from app.database import get_db
 from app.models.models import Facility, User
 from app.schemas.schemas import FacilityCreate, FacilityUpdate, FacilityResponse
 from app.utils.auth import get_current_user, require_admin
 from app.utils.conflict import get_available_slots
 from datetime import datetime
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+UPLOAD_DIR = BASE_DIR / "uploads"
+IMAGE_DIR = UPLOAD_DIR / "images"
 
 router = APIRouter()
 
@@ -74,12 +79,50 @@ def update_facility(
     if not update_data:
         raise HTTPException(status_code=400, detail="Tidak ada data yang diubah")
 
+    kapasitas_min = update_data.get("kapasitas_min", facility.kapasitas_min)
+    kapasitas_max = update_data.get("kapasitas_max", facility.kapasitas_max)
+
+    if kapasitas_min is not None and kapasitas_min < 0:
+        raise HTTPException(status_code=400, detail="Kapasitas minimal tidak boleh negatif")
+    if kapasitas_max is not None and kapasitas_max <= 0:
+        raise HTTPException(status_code=400, detail="Kapasitas maksimal harus lebih dari 0")
+    if kapasitas_min is not None and kapasitas_min >= kapasitas_max:
+        raise HTTPException(status_code=400, detail="Kapasitas maksimal harus lebih besar dari kapasitas minimal")
+
+    old_photo = None
+    if "foto" in update_data:
+        new_photo = update_data.get("foto")
+        if facility.foto and facility.foto != new_photo:
+            old_photo = facility.foto
+
     for key, value in update_data.items():
         setattr(facility, key, value)
 
     db.commit()
     db.refresh(facility)
+
+    if old_photo:
+        _delete_local_image(old_photo)
+
     return facility
+
+
+def _delete_local_image(image_url: Optional[str]):
+    if not image_url:
+        return
+
+    parts = image_url.split("/uploads/images/")
+    if len(parts) != 2:
+        return
+
+    filename_part = parts[1].split("?")[0].split("#")[0]
+    filename = Path(filename_part).name
+    image_path = IMAGE_DIR / filename
+    if image_path.exists() and image_path.is_file():
+        try:
+            image_path.unlink()
+        except OSError:
+            pass
 
 
 @router.delete("/{facility_id}")
@@ -91,8 +134,16 @@ def delete_facility(
     facility = db.query(Facility).filter(Facility.id == facility_id).first()
     if not facility:
         raise HTTPException(status_code=404, detail="Fasilitas tidak ditemukan")
+
+    image_to_delete = facility.foto
     db.delete(facility)
-    db.commit()
+    try:
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Fasilitas tidak dapat dihapus. Pastikan tidak ada peminjaman terkait.")
+
+    _delete_local_image(image_to_delete)
     return {"message": "Fasilitas berhasil dihapus"}
 
 
