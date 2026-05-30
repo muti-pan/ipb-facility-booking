@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { apiFetch } from "../../App";
+import { useState, useEffect, useRef } from "react";
+import { apiFetch, apiUpload } from "../../App";
 
 // Format waktu real-time sesuai zona waktu lokal laptop
 function formatWaktuSekarang(date) {
@@ -26,11 +26,19 @@ export default function BookingForm({ facility, onSuccess, onBack }) {
     tanggal_peminjaman: today,
     jam_mulai: "08:00",
     jam_selesai: "17:00",
-    lampiran_surat: "",
+    lampiran_surat: null,
+    lampiran_nama: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const errorRef = useRef(null);
+
+  useEffect(() => {
+    if (error) {
+      errorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [error]);
 
   // State untuk jam real-time
   const [waktuSekarang, setWaktuSekarang] = useState(new Date());
@@ -46,7 +54,16 @@ export default function BookingForm({ facility, onSuccess, onBack }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
+
+    if (!form.kegiatan_organisasi || form.kegiatan_organisasi.trim() === "") {
+      setError("Isi Nama UKM/Organisasi/Lembaga terlebih dahulu.");
+      return;
+    }
+
+    if (form.jam_mulai >= form.jam_selesai) {
+      setError("Waktu selesai harus lebih dari waktu mulai.");
+      return;
+    }
 
     const bookingStart = new Date(`${form.tanggal_peminjaman}T${form.jam_mulai}`);
     const now = new Date();
@@ -54,36 +71,30 @@ export default function BookingForm({ facility, onSuccess, onBack }) {
 
     if (diffHours < 24) {
       setError("Peminjaman ruangan harus dilakukan minimal 1x24 jam sebelum kegiatan dimulai.");
-      setLoading(false);
-      return; 
-    }
-
-    if (form.jam_mulai >= form.jam_selesai) {
-      setError("Waktu selesai harus lebih dari waktu mulai.");
-      setLoading(false);
       return;
     }
 
-    if (!form.kegiatan_organisasi || form.kegiatan_organisasi.trim() === "") {
-      setError("Isi Nama UKM/Organisasi/Lembaga terlebih dahulu.");
-      setLoading(false);
+    if (!form.lampiran_surat) {
+      setError("Lampiran surat peminjaman wajib diunggah dalam format PDF.");
       return;
     }
 
-    if (!form.lampiran_surat || form.lampiran_surat.trim() === "") {
-      setError("Sertakan Link Google Drive Lampiran Surat Peminjaman.");
-      setLoading(false);
-      return;
-    }
+    setLoading(true);
 
     try {
+      let lampiranUrl = form.lampiran_surat;
+      if (form.lampiran_surat instanceof File) {
+        const uploadResult = await apiUpload("/uploads/pdf", form.lampiran_surat);
+        lampiranUrl = uploadResult.url;
+      }
+
       const payload = {
         fasilitas_id: facility.id,
         kegiatan_organisasi: form.kegiatan_organisasi,
         tanggal_peminjaman: new Date(form.tanggal_peminjaman).toISOString(),
         jam_mulai: form.jam_mulai,
         jam_selesai: form.jam_selesai,
-        lampiran_surat: form.lampiran_surat,
+        lampiran_surat: lampiranUrl,
       };
 
       await apiFetch("/bookings/", {
@@ -138,7 +149,7 @@ export default function BookingForm({ facility, onSuccess, onBack }) {
         </span>
       </div>
 
-      {error && <div className="error-msg">{error}</div>}
+      {error && <div className="error-msg" ref={errorRef}>{error}</div>}
 
       <div className="form-group">
         <label className="form-label">1. Nama UKM / Organisasi / Lembaga</label>
@@ -192,16 +203,23 @@ export default function BookingForm({ facility, onSuccess, onBack }) {
       </div>
 
       <div className="form-group">
-        <label className="form-label">3. Lampiran Surat Peminjaman (URL PDF)</label>
+        <label className="form-label">3. Lampiran Surat Peminjaman (PDF)</label>
         <input
           className="form-input"
-          type="url"
-          placeholder="https://drive.google.com/... atau URL file PDF"
-          value={form.lampiran_surat}
-          onChange={e => setForm(p => ({ ...p, lampiran_surat: e.target.value }))}
+          type="file"
+          accept="application/pdf"
+          onChange={e => {
+            const file = e.target.files?.[0] || null;
+            setForm(p => ({ ...p, lampiran_surat: file, lampiran_nama: file?.name || "" }));
+          }}
           required
         />
-        <p className="form-hint">Upload ke Google Drive/OneDrive lalu paste link-nya di sini</p>
+        {form.lampiran_nama && (
+          <div style={{ marginTop: 8, fontSize: 12, color: "var(--text-muted)" }}>
+            File dipilih: {form.lampiran_nama}
+          </div>
+        )}
+        <p className="form-hint">Upload file PDF langsung dari perangkat Anda.</p>
       </div>
 
       <div style={{ display: "flex", gap: 10, marginTop: 4 }}>

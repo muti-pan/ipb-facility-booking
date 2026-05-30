@@ -53,14 +53,56 @@ class Token(BaseModel):
 
 class FacilityCreate(BaseModel):
     nama: str
-    foto: Optional[str] = None
+    foto: str
     kapasitas_min: Optional[int] = None
     kapasitas_max: int
     harga: float
-    deskripsi: Optional[str] = None
+    deskripsi: str
     penanggung_jawab: str
-    kontak_pj: Optional[str] = None
+    kontak_pj: str
     fakultas: str
+
+    @field_validator("foto")
+    @classmethod
+    def validate_foto(cls, v):
+        if not v or not v.strip():
+            raise ValueError("Foto fasilitas wajib diunggah")
+        return v
+
+    @field_validator("deskripsi")
+    @classmethod
+    def validate_deskripsi(cls, v):
+        if not v or not v.strip():
+            raise ValueError("Deskripsi fasilitas wajib diisi")
+        return v
+
+    @field_validator("kontak_pj")
+    @classmethod
+    def validate_kontak_pj(cls, v):
+        if not v or not v.strip():
+            raise ValueError("Nomor telepon PJ wajib diisi")
+        return v
+
+    @field_validator("kapasitas_min")
+    @classmethod
+    def validate_min_capacity(cls, v):
+        if v is not None and v < 0:
+            raise ValueError("Kapasitas minimal tidak boleh negatif")
+        return v
+
+    @field_validator("kapasitas_max")
+    @classmethod
+    def validate_max_capacity(cls, v):
+        if v <= 0:
+            raise ValueError("Kapasitas maksimal harus lebih dari 0")
+        return v
+
+    @model_validator(mode="after")
+    @classmethod
+    def validate_capacity_range(cls, values):
+        if values.kapasitas_min is not None and values.kapasitas_min >= values.kapasitas_max:
+            raise ValueError("Kapasitas maksimal harus lebih besar dari kapasitas minimal")
+        return values
 
 
 class FacilityUpdate(BaseModel):
@@ -74,6 +116,34 @@ class FacilityUpdate(BaseModel):
     kontak_pj: Optional[str] = None
     fakultas: Optional[str] = None
     status_fasilitas: Optional[str] = None
+
+    @field_validator("kapasitas_min")
+    @classmethod
+    def validate_min_capacity(cls, v):
+        if v is not None and v < 0:
+            raise ValueError("Kapasitas minimal tidak boleh negatif")
+        return v
+
+    @field_validator("kapasitas_max")
+    @classmethod
+    def validate_max_capacity(cls, v):
+        if v is not None and v <= 0:
+            raise ValueError("Kapasitas maksimal harus lebih dari 0")
+        return v
+
+    @field_validator("deskripsi")
+    @classmethod
+    def validate_deskripsi_update(cls, v):
+        if v is not None and not v.strip():
+            raise ValueError("Deskripsi fasilitas wajib diisi")
+        return v
+
+    @field_validator("kontak_pj")
+    @classmethod
+    def validate_kontak_pj_update(cls, v):
+        if v is not None and not v.strip():
+            raise ValueError("Nomor telepon PJ wajib diisi")
+        return v
 
 
 class FacilityResponse(BaseModel):
@@ -143,6 +213,7 @@ class BookingResponse(BaseModel):
     alasan_penolakan: Optional[str]
     cancellation_id: Optional[int] = None
     cancellation_lampiran_surat_pembatalan: Optional[str] = None
+    cancellation_alasan: Optional[str] = None
     created_at: datetime
     fasilitas: Optional[FacilityResponse]
 

@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
@@ -131,13 +132,27 @@ def cancel_booking(
     if booking.status not in [BookingStatus.menunggu, BookingStatus.disetujui]:
         raise HTTPException(status_code=400, detail="Peminjaman tidak dapat dibatalkan")
 
-    # If already approved, need letter and admin approval
+    booking_date = booking.tanggal_peminjaman
+    now_utc = datetime.now(timezone.utc)
+    if booking_date.tzinfo is None:
+        booking_date = booking_date.replace(tzinfo=timezone.utc)
+
+    if booking_date.date() < now_utc.date():
+        raise HTTPException(
+            status_code=400,
+            detail="Peminjaman dengan tanggal yang sudah lewat tidak dapat dibatalkan"
+        )
+
+    # If already approved, require a cancellation letter and create a pending
+    # cancellation request (menunggu_batal) that must be approved by admin.
+    # If still pending (not yet approved), perform an immediate cancel.
     if booking.status == BookingStatus.disetujui:
         if not cancel_data.lampiran_surat_pembatalan:
             raise HTTPException(
                 status_code=400,
                 detail="Peminjaman yang sudah disetujui memerlukan surat pembatalan"
             )
+
         booking.status = BookingStatus.menunggu_batal
         cancellation = Cancellation(
             booking_id=booking_id,
@@ -145,8 +160,28 @@ def cancel_booking(
             lampiran_surat_pembatalan=cancel_data.lampiran_surat_pembatalan,
             status="pending"
         )
+
+        db.add(cancellation)
+        db.commit()
+        db.refresh(cancellation)
+
+        # Notify admin(s) about the new cancellation request
+        admins = db.query(User).filter(User.role == "admin").all()
+        for admin in admins:
+            create_notification(
+                db=db,
+                user_id=admin.id,
+                booking_id=booking.id,
+                judul="Permintaan Pembatalan Baru",
+                pesan=(
+                    f"{current_user.nama} mengajukan pembatalan peminjaman {booking.fasilitas.nama} "
+                    f"pada {booking.tanggal_peminjaman.strftime('%d/%m/%Y')} pukul {booking.jam_mulai}–{booking.jam_selesai}."
+                )
+            )
+
+        return cancellation
     else:
-        # Still pending → auto cancel
+        # Still pending → auto cancel immediately
         booking.status = BookingStatus.dibatalkan
         cancellation = Cancellation(
             booking_id=booking_id,
@@ -154,7 +189,7 @@ def cancel_booking(
             status="approved"
         )
 
-    db.add(cancellation)
-    db.commit()
-    db.refresh(cancellation)
-    return cancellation
+        db.add(cancellation)
+        db.commit()
+        db.refresh(cancellation)
+        return cancellation

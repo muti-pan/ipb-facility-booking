@@ -21,6 +21,7 @@
   --status-pending: #f59e0b;
   --status-approved: #10b981;
   --status-rejected: #ef4444;
+  --status-cancelling: #d97706;
   --status-cancelled: #6b7280;
 
   /* Shadows */

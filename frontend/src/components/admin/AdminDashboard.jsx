@@ -26,7 +26,7 @@ export default function AdminDashboard() {
     try {
       const data = await apiFetch("/admin/stats");
       setStats(data);
-      setPendingCount(data.menunggu || 0);
+      setPendingCount((data.menunggu || 0) + (data.menunggu_batal || 0));
     } catch {}
   };
 
@@ -107,17 +107,18 @@ export default function AdminDashboard() {
             <div className="admin-topbar-title">{PAGE_TITLES[page]}</div>
             {stats && (
               <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
-                {stats.total} total · {stats.menunggu} menunggu persetujuan · {stats.disetujui} disetujui
+                {stats.total} total · {stats.menunggu} menunggu persetujuan · {stats.menunggu_batal} menunggu batal · {stats.disetujui} disetujui
               </div>
             )}
           </div>
 
           {/* Stats quick view */}
           {stats && (
-            <div style={{ display: "flex", gap: 12 }}>
-              <StatPill label="Menunggu Persetujuan"  value={stats.menunggu}  color="var(--status-pending)"  />
-              <StatPill label="Disetujui" value={stats.disetujui} color="var(--status-approved)" />
-              <StatPill label="Ditolak"   value={stats.ditolak}   color="var(--status-rejected)" />
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+              <StatPill label="Menunggu Persetujuan"  value={stats.menunggu}      color="var(--status-pending)"  />
+              <StatPill label="Menunggu Batal"       value={stats.menunggu_batal} color="var(--status-cancelling)" />
+              <StatPill label="Disetujui"            value={stats.disetujui}      color="var(--status-approved)" />
+              <StatPill label="Ditolak"              value={stats.ditolak}        color="var(--status-rejected)" />
             </div>
           )}
         </div>

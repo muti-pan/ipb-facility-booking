@@ -65,9 +65,9 @@ export default function FacilityModal({ facility, onClose, onBookingSuccess }) {
               )}
 
               <div className="pj-info">
-                <div><strong>Tujuan Surat: </strong><span>{facility.penanggung_jawab}</span></div>
+                <div><strong>Penanggung Jawab Ruangan: </strong><span>{facility.penanggung_jawab}</span></div>
                 {facility.kontak_pj && (
-                  <div style={{ marginTop: 4 }}><strong>Kontak: </strong><span>{facility.kontak_pj}</span></div>
+                  <div style={{ marginTop: 4 }}><strong>Kontak PJ Ruangan: </strong><span>{facility.kontak_pj}</span></div>
                 )}
               </div>
 
