@@ -130,7 +130,7 @@ DATABASE_URL=sqlite:///./ipb_facility.db
 SECRET_KEY=ganti-dengan-string-random-panjang-32-karakter
 ```
 
-> Catatan: folder `backend/uploads/images` dan `backend/uploads/pdfs` akan dibuat otomatis oleh backend saat dijalankan.
+
 
 #### 5. Isi data awal (seed)
 ```bash
