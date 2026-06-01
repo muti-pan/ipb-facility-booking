@@ -131,7 +131,6 @@ SECRET_KEY=ganti-dengan-string-random-panjang-32-karakter
 ```
 
 
-
 #### 5. Isi data awal (seed)
 ```bash
 python seed.py
@@ -141,7 +140,8 @@ Output yang diharapkan:
 ```
 ✅ Seed berhasil!
    Admin: admin@ipb.ac.id / admin123
-   Mahasiswa: budi@apps.ipb.ac.id / mhs123
+   Mahasiswa 1: budi@apps.ipb.ac.id / mhs123
+   Mahasiswa 2: sari@apps.ipb.ac.id / mhs234
 ```
 
 #### 6. Jalankan server backend
