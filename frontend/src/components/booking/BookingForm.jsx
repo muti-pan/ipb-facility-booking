@@ -105,7 +105,7 @@ export default function BookingForm({ facility, onSuccess, onBack }) {
       setSuccess(true);
       setTimeout(onSuccess, 2000);
     } catch (err) {
-      setError("Terjadi kesalahan sistem saat mengirim data. Coba lagi.");
+      setError(err?.message || "Terjadi kesalahan sistem saat mengirim data. Coba lagi.");
       console.error("Error API:", err);
     } finally {
       setLoading(false);
