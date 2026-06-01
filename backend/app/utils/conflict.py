@@ -4,17 +4,20 @@ from app.models.models import Booking, BookingStatus
 from datetime import datetime
 
 
-def check_schedule_conflict(
+from typing import Optional
+
+
+def get_conflicting_booking(
     db: Session,
     fasilitas_id: int,
     tanggal: datetime,
     jam_mulai: str,
     jam_selesai: str,
     exclude_booking_id: int = None
-) -> bool:
+) -> Optional[Booking]:
     """
-    Returns True if there is a conflict (jadwal bentrok).
-    Checks against all active bookings (menunggu or disetujui).
+    Returns the first conflicted booking if the requested slot overlaps with an
+    existing active booking (menunggu or disetujui).
     """
     query = db.query(Booking).filter(
         Booking.fasilitas_id == fasilitas_id,
@@ -40,9 +43,27 @@ def check_schedule_conflict(
 
         # Overlap check: new starts before existing ends AND new ends after existing starts
         if new_start < existing_end and new_end > existing_start:
-            return True
+            return booking
 
-    return False
+    return None
+
+
+def check_schedule_conflict(
+    db: Session,
+    fasilitas_id: int,
+    tanggal: datetime,
+    jam_mulai: str,
+    jam_selesai: str,
+    exclude_booking_id: int = None
+) -> bool:
+    return get_conflicting_booking(
+        db=db,
+        fasilitas_id=fasilitas_id,
+        tanggal=tanggal,
+        jam_mulai=jam_mulai,
+        jam_selesai=jam_selesai,
+        exclude_booking_id=exclude_booking_id
+    ) is not None
 
 
 def get_available_slots(

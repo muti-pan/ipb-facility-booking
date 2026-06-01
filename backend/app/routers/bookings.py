@@ -6,7 +6,7 @@ from app.database import get_db
 from app.models.models import Booking, BookingStatus, Facility, User
 from app.schemas.schemas import BookingCreate, BookingResponse, BookingDetailResponse, CancellationCreate, CancellationResponse
 from app.utils.auth import get_current_user, require_mahasiswa
-from app.utils.conflict import check_schedule_conflict
+from app.utils.conflict import get_conflicting_booking
 from app.utils.notifications import create_notification
 from app.models.models import Cancellation
 
@@ -73,17 +73,18 @@ def create_booking(
         raise HTTPException(status_code=400, detail="Jam selesai harus setelah jam mulai")
 
     # ✅ Conflict detection
-    has_conflict = check_schedule_conflict(
+    conflict_booking = get_conflicting_booking(
         db=db,
         fasilitas_id=booking_data.fasilitas_id,
         tanggal=booking_data.tanggal_peminjaman,
         jam_mulai=booking_data.jam_mulai,
         jam_selesai=booking_data.jam_selesai
     )
-    if has_conflict:
+    if conflict_booking:
+        tanggal_str = conflict_booking.tanggal_peminjaman.strftime("%d/%m/%Y")
         raise HTTPException(
             status_code=409,
-            detail="Jadwal bentrok dengan peminjaman lain. Silakan pilih waktu yang berbeda."
+            detail=f"Peminjaman bentrok karena ruangan telah dipinjam pada tanggal {tanggal_str} jam {conflict_booking.jam_mulai} sampai {conflict_booking.jam_selesai}."
         )
 
     booking = Booking(
