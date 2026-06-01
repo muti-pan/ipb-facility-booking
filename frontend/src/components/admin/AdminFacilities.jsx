@@ -232,7 +232,7 @@ export default function AdminFacilities({ onAdd }) {
                   </span>
                 </div>
                 <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 12 }}>
-                  PJ Ruangan: {f.penanggung_jawab}
+                  Tujuan Surat: {f.penanggung_jawab}
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
                   <button className="btn btn-secondary btn-sm" style={{ flex: 1 }} onClick={() => openEdit(f)}>
